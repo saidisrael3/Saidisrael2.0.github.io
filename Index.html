@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora Científica Completa</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@11/lib/browser/math.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Añadiendo Font Awesome para los iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      background-color: #00923d;
+      color: rgb(0, 0, 0);
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      height: 100vh;
+    }
+
+    .calculadora {
+      background-color: #0a16c2;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgb(202, 164, 164);
+      width: 350px;
+      margin-right: 40px;
+    }
+
+    .pantalla {
+      background-color: #811111;
+      color: rgb(154, 187, 154);
+      font-size: 24px;
+      padding: 15px;
+      text-align: right;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      height: 50px;
+      overflow-x: auto;
+    }
+
+    .botones {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    button {
+      padding: 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background-color: red;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background-color: #ff4d4d;
+    }
+
+    canvas {
+      background-color: #fff;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    #piDisplay {
+      margin-top: 10px;
+      font-size: 14px;
+      word-break: break-word;
+      background: #222;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    /* Estilo para el icono del carrito */
+    .carro {
+      font-size: 60px;
+      color: white;
+      margin-left: 50px;
+      cursor: pointer;
+    }
+
+    .carro:hover {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+<div class="calculadora">
+  <div class="pantalla" id="pantalla">0</div>
+  <div class="botones">
+    <button onclick="agregar('pi')">π</button>
+    <button onclick="agregar('e')">e</button>
+    <button onclick="agregar('^')">^</button>
+    <button onclick="agregar('sqrt(')">√</button>
+    <button onclick="borrar()">C</button>
+
+    <button onclick="agregar('7')">7</button>
+    <button onclick="agregar('8')">8</button>
+    <button onclick="agregar('9')">9</button>
+    <button onclick="agregar('/')">÷</button>
+    <button onclick="agregar('log(')">log</button>
+
+    <button onclick="agregar('4')">4</button>
+    <button onclick="agregar('5')">5</button>
+    <button onclick="agregar('6')">6</button>
+    <button onclick="agregar('*')">×</button>
+    <button onclick="agregar('ln(')">ln</button>
+
+    <button onclick="agregar('1')">1</button>
+    <button onclick="agregar('2')">2</button>
+    <button onclick="agregar('3')">3</button>
+    <button onclick="agregar('-')">−</button>
+    <button onclick="agregar('tan(')">tan</button>
+
+    <button onclick="agregar('0')">0</button>
+    <button onclick="agregar('.')">.</button>
+    <button onclick="calcular()">=</button>
+    <button onclick="agregar('+')">+</button>
+    <button onclick="agregar('cos(')">cos</button>
+
+    <button onclick="agregar('sin(')">sin</button>
+    <button onclick="agregar('(')">(</button>
+    <button onclick="agregar(')')">)</button>
+    <button onclick="graficar()">Graph</button>
+    <button onclick="mostrarPi()">π full</button>
+  </div>
+</div>
+
+<!-- Icono del carrito -->
+<i class="fas fa-shopping-cart carro" onclick="alert('Carrito de compras está vacío')"></i>
+
+<canvas id="grafica" width="600" height="300"></canvas>
+<div id="piDisplay"></div>
+
+<script>
+  const pantalla = document.getElementById("pantalla");
+  const ctx = document.getElementById("grafica").getContext("2d");
+  let grafico;
+
+  // Función para agregar caracteres a la pantalla
+  function agregar(valor) {
+    if (pantalla.innerText === "0" || pantalla.innerText === "Error") {
+      pantalla.innerText = valor;
+    } else {
+      pantalla.innerText += valor;
+    }
+  }
+
+  // Función para borrar la pantalla
+  function borrar() {
+    pantalla.innerText = "0";
+    document.getElementById("piDisplay").innerText = "";
+  }
+
+  // Función para calcular el resultado
+  function calcular() {
+    try {
+      let expr = pantalla.innerText.replace(/x/g, '*');
+      let resultado = math.evaluate(expr);
+      pantalla.innerText = resultado;
+    } catch {
+      pantalla.innerText = "Error";
+    }
+  }
+
+  // Función para mostrar el valor de π largo
+  function mostrarPi() {
+    const piLargo = math.pi.toString().substring(0, 100);
+    document.getElementById("piDisplay").innerText = "π = " + piLargo + "...";
+  }
+
+  // Función para graficar la expresión
+  function graficar() {
+    try {
+      let expr = pantalla.innerText.replace(/x/g, '*');
+      const xVals = math.range(-10, 10, 0.1).toArray();
+      const yVals = xVals.map(x => {
+        try {
+          return math.evaluate(expr, { x: x });
+        } catch {
+          return NaN;
+        }
+      });
+
+      if (grafico) grafico.destroy();
+
+      grafico = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: xVals,
+          datasets: [{
+            label: `y = ${expr}`,
+            data: yVals,
+            borderColor: 'red',
+            borderWidth: 2,
+            fill: false,
+            pointRadius: 0,
+          }]
+        },
+        options: {
+          responsive: false,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'x'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'y'
+              }
+            }
+          }
+        }
+      });
+
+    } catch {
+      alert("Error al graficar. Asegúrate de usar la variable 'x'.");
+    }
+  }
+</script>
+
+</body>
+</html>
